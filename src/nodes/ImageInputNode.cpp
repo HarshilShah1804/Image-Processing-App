@@ -74,6 +74,7 @@ void ImageInputNode::loadImage(const std::string& path) {
 }
 
 void ImageInputNode::renderUI() {
+    ImGui::SetNextWindowSize(ImVec2(200, 200));
     ImGui::Begin(("Image Input Node " + std::to_string(id)).c_str());
 
     ImGui::InputText("File Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
