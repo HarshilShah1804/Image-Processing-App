@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <memory>
-#include "nodes/ImageInputNode.h"
+#include "nodes/graph.h"
 
 void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -21,6 +21,7 @@ void DrawNeonGrid(ImDrawList* draw_list, ImVec2 canvas_p0, ImVec2 canvas_p1, flo
 }
 
 int main() {
+    Graph g;
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return -1;
 
@@ -37,9 +38,6 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    std::vector<std::unique_ptr<Node>> nodes;
-    nodes.push_back(std::make_unique<ImageInputNode>());
-
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         ImGui_ImplOpenGL3_NewFrame();
@@ -52,26 +50,23 @@ int main() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
         ImGui::Begin("##Canvas", nullptr,
-                     ImGuiWindowFlags_NoTitleBar |
-                     ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoCollapse |
-                     ImGuiWindowFlags_NoBringToFrontOnFocus |
-                     ImGuiWindowFlags_NoBackground);
+                    ImGuiWindowFlags_NoTitleBar |
+                    ImGuiWindowFlags_NoResize |
+                    ImGuiWindowFlags_NoMove |
+                    ImGuiWindowFlags_NoCollapse |
+                    ImGuiWindowFlags_NoBringToFrontOnFocus |
+                    ImGuiWindowFlags_NoBackground);
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 canvas_p0 = ImGui::GetWindowPos();
         ImVec2 canvas_p1 = ImVec2(canvas_p0.x + io.DisplaySize.x, canvas_p0.y + io.DisplaySize.y);
         DrawNeonGrid(draw_list, canvas_p0, canvas_p1, 50.0f);
-
         ImGui::End();
         ImGui::PopStyleVar(2);
 
-        // Render + process all nodes
-        for (auto& node : nodes) {
-            node->renderUI();
-            node->process();
-        }
+        g.renderAddNodeUI();  // UI to add nodes dynamically
+        g.renderUI();         // Render node UIs
+        g.process();          // Process them in topological order (stub for now)
 
         // Render everything
         ImGui::Render();
@@ -83,6 +78,7 @@ int main() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
+
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
