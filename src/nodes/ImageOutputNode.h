@@ -13,18 +13,18 @@ public:
     void process() override;
     std::string getName() const override;
     cv::Mat getImage() const override;
-    void setInputImage(const cv::Mat& input);
-    void saveImage(const std::string& path);
+
+    // Called by the graph to pass data into this node
+    void setInputImage(const cv::Mat &img);
+    void loadImage();
+    void saveImage(const std::string &path);
 
 private:
     std::string filepath;
     cv::Mat image;
-    cv::Mat inputImage;
     GLuint textureID;
     bool textureValid;
-    bool imageChanged;
     char inputBuffer[512];
     std::string saveStatus;
 
-    void updateTextureFromImage();
 };
