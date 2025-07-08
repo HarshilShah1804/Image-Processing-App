@@ -25,6 +25,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/lib/imgui/backends
     ${CMAKE_SOURCE_DIR}/lib/imgui-node-editor
     ${CMAKE_SOURCE_DIR}/lib/imgui-node-editor/examples/application/source
+    ${CMAKE_SOURCE_DIR}/lib/imnodes
     ${CMAKE_SOURCE_DIR}/src
     ${OpenCV_INCLUDE_DIRS}
     ${GLFW_INCLUDE_DIRS}
@@ -41,6 +42,10 @@ file(GLOB NODE_EDITOR_SOURCES
     lib/imgui-node-editor/*.cpp
 )
 
+file(GLOB IMNODES_SOURCES
+    lib/imnodes/*.cpp
+)
+
 file(GLOB APP_SOURCES
     src/**/*.cpp
     app.cpp
@@ -48,6 +53,7 @@ file(GLOB APP_SOURCES
 
 add_executable(ImageNodeApp
     ${IMGUI_SOURCES}
+    ${IMNODES_SOURCES}
     ${NODE_EDITOR_SOURCES}
     ${APP_SOURCES}
 )
