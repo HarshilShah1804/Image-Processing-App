@@ -37,3 +37,21 @@ jobs:
 
       - name: Build project
         run: cmake --build build --parallel
+
+      - name: Run Executable and Check for Segfault
+        run: |
+          set +e
+          ./build/ImageEditor
+          EXIT_CODE=$?
+          set -e
+
+          if [ "$EXIT_CODE" -eq 139 ]; then
+            echo "Segmentation fault detected!"
+            exit 1
+          elif [ "$EXIT_CODE" -ne 0 ]; then
+            echo "Program exited with non-zero code: $EXIT_CODE"
+            exit $EXIT_CODE
+          else
+            echo "Program ran successfully without segmentation fault."
+          fi
+
