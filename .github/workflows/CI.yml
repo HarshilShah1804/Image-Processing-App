@@ -1,0 +1,36 @@
+name: Build Image Editor
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (OpenCV, OpenGL)
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            cmake g++ \
+            libopencv-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            xorg-dev
+
+      - name: Clone imgui, imnodes, and glfw
+        run: |
+          mkdir -p lib
+          git clone https://github.com/ocornut/imgui.git lib/imgui
+          git clone https://github.com/Nelarius/imnodes.git lib/imnodes
+          git clone https://github.com/glfw/glfw.git lib/glfw
+
+      - name: Configure project
+        run: cmake -S . -B build
+
+      - name: Build project
+        run: cmake --build build --parallel
