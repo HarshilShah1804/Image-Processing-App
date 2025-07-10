@@ -21,6 +21,7 @@ jobs:
             libgl1-mesa-dev \
             libglu1-mesa-dev \
             xorg-dev
+          sudo apt install -y libglfw3-dev
 
       - name: Clone imgui, imnodes, and glfw
         run: |
