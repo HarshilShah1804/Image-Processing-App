@@ -1,5 +1,6 @@
 // src/app.cpp
 #include <imgui.h>
+#include <imnodes.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
@@ -39,6 +40,8 @@ int main() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     while (!glfwWindowShouldClose(window)) {
+        ImNodes::CreateContext();
+        ImNodes::StyleColorsDark();
         glfwPollEvents();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -65,8 +68,16 @@ int main() {
         ImGui::PopStyleVar(2);
 
         g.renderAddNodeUI();  // UI to add nodes dynamically
+        ImNodes::BeginNodeEditor();
         g.renderUI();         // Render node UIs
-        g.process();          // Process them in topological order (stub for now)
+        ImNodes::EndNodeEditor();
+
+        int startAttr, endAttr;
+        if (ImNodes::IsLinkCreated(&startAttr, &endAttr)) {
+            g.addEdge(startAttr, endAttr);
+        }
+        
+        g.process();
 
         // Render everything
         ImGui::Render();

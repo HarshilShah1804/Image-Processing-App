@@ -1,4 +1,6 @@
 #include "Node.h"
-#include <imgui.h>
 
-Node::~Node() = default;  // This is essential for virtual destructors in abstract classes
+int Node::generateUniqueId() {
+    static int counter = 10000;
+    return counter++;
+}

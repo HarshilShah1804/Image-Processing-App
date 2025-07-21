@@ -1,10 +1,12 @@
 #include "ImageInputNode.h"
 
 #include <imgui.h>
+#include <imnodes.h>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <GL/gl.h>
 #include <iostream>
+
 
 ImageInputNode::ImageInputNode() {
     filepath = "";
@@ -13,6 +15,11 @@ ImageInputNode::ImageInputNode() {
     textureValid = false;
     memset(inputBuffer, 0, sizeof(inputBuffer));
     name = "Image Input Node";
+
+    id = Node::generateUniqueId();
+
+    // This node has no input pins, only output
+    outputs.push_back({generateUniqueId(), "Image"});
 }
 
 ImageInputNode::~ImageInputNode() {
@@ -23,7 +30,7 @@ ImageInputNode::~ImageInputNode() {
 }
 
 void ImageInputNode::process() {
-    // No processing for input node
+    // No processing — image is already loaded
 }
 
 std::string ImageInputNode::getName() const {
@@ -34,22 +41,30 @@ cv::Mat ImageInputNode::getImage() const {
     return image;
 }
 
+void ImageInputNode::setInputImage(const cv::Mat& img) {
+    // Input node doesn't accept input
+}
+
+void ImageInputNode::resetInput() {
+    // No-op
+}
+
 void ImageInputNode::loadImage(const std::string& path) {
     filepath = path;
     image = cv::imread(path);
 
     if (image.empty()) {
         std::cerr << "Failed to load image from: " << path << std::endl;
+        textureValid = false;
         return;
     }
 
-    // Delete previous texture if any
     if (textureID != 0) {
+        std::cout << "Deleting old texture ID: " << textureID << std::endl;
         glDeleteTextures(1, &textureID);
         textureID = 0;
     }
 
-    // Convert to RGBA
     cv::Mat displayImage;
     if (image.channels() == 1)
         cv::cvtColor(image, displayImage, cv::COLOR_GRAY2RGBA);
@@ -60,9 +75,8 @@ void ImageInputNode::loadImage(const std::string& path) {
     else
         return;
 
-    cv::flip(displayImage, displayImage, 0);  // Flip for OpenGL
+    cv::flip(displayImage, displayImage, 0);
 
-    // Upload to texture
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -74,10 +88,23 @@ void ImageInputNode::loadImage(const std::string& path) {
 }
 
 void ImageInputNode::renderUI() {
-    ImGui::SetNextWindowSize(ImVec2(200, 200));
-    ImGui::Begin(("Image Input Node " + std::to_string(id)).c_str());
+    ImNodes::BeginNode(id);
 
-    ImGui::InputText("File Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Image Input");
+    ImNodes::EndNodeTitleBar();
+
+    // Output Pin
+    if (!outputs.empty()) {
+        ImNodes::BeginOutputAttribute(outputs[0].id);
+        ImGui::Text("Out");
+        ImNodes::EndOutputAttribute();
+    }
+
+    ImGui::PushItemWidth(150);
+    ImGui::InputText("##FilePath", inputBuffer, IM_ARRAYSIZE(inputBuffer));
+    ImGui::PopItemWidth();
+
     if (ImGui::Button("Load")) {
         filepath = std::string(inputBuffer);
         loadImage(filepath);
@@ -88,5 +115,5 @@ void ImageInputNode::renderUI() {
         ImGui::Image((ImTextureID)(intptr_t)textureID, ImVec2(128, 128));
     }
 
-    ImGui::End();
+    ImNodes::EndNode();
 }

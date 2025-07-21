@@ -3,57 +3,81 @@
 #include <GL/gl.h>
 #include <iostream>
 #include <imgui.h>
+#include <imnodes.h>
 
 GrayScaleNode::GrayScaleNode() {
     name = "GrayScale";
-    position = ImVec2(300, 100);  // Fixes your position error
+    position = ImVec2(300, 100); // Optional positioning
     textureID = 0;
     textureValid = false;
+
+    id = Node::generateUniqueId();
+    inputs.push_back({generateUniqueId(), "In"});
+    outputs.push_back({generateUniqueId(), "Out"});
 }
 
 void GrayScaleNode::renderUI() {
-    ImGui::Begin(name.c_str());
-    ImGui::Text("GrayScale Node");
+    ImNodes::BeginNode(id);
+
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Grayscale");
+    ImNodes::EndNodeTitleBar();
+
+    if (!inputs.empty()) {
+        ImNodes::BeginInputAttribute(inputs[0].id);
+        ImGui::Text("In");
+        ImNodes::EndInputAttribute();
+    }
+
+    if (!outputs.empty()) {
+        ImNodes::BeginOutputAttribute(outputs[0].id);
+        ImGui::Text("Out");
+        ImNodes::EndOutputAttribute();
+    }
+
+    if (ImGui::Button("Process")) {
+        if (inputImage.empty()) {
+            std::cerr << "[GrayScaleNode] No input image.\n";
+            return;
+        }
+        loadImage();
+    }
 
     if (textureValid && textureID != 0) {
         ImGui::Text("Preview:");
         ImGui::Image((ImTextureID)(intptr_t)textureID, ImVec2(128, 128));
     }
 
-    ImGui::End();
+    ImNodes::EndNode();
 }
 
-void GrayScaleNode::process() {
-
+void GrayScaleNode::loadImage() {
     if (inputImage.empty()) {
-        std::cerr << "No input Image" << std::endl;
+        std::cerr << "[GrayScaleNode] No input image.\n";
+        textureValid = false;
         return;
     }
 
-    if (!inputImage.empty()) {
-        cv::cvtColor(inputImage, outputImage, cv::COLOR_BGR2GRAY);
-    }
-
-    // Delete previous texture if any
     if (textureID != 0) {
+        std::cout << textureID << " deleted.\n";
         glDeleteTextures(1, &textureID);
         textureID = 0;
     }
 
-    // Convert to RGBA
+    cv::cvtColor(inputImage, outputImage, cv::COLOR_BGR2GRAY);
+
     cv::Mat displayImage;
-    if (outputImage.channels() == 1)
-        cv::cvtColor(outputImage, displayImage, cv::COLOR_GRAY2RGBA);
-    else if (outputImage.channels() == 3)
-        cv::cvtColor(outputImage, displayImage, cv::COLOR_BGR2RGBA);
-    else if (outputImage.channels() == 4)
-        displayImage = outputImage.clone();
+    if (inputImage.channels() == 1)
+        cv::cvtColor(inputImage, displayImage, cv::COLOR_GRAY2RGBA);
+    else if (inputImage.channels() == 3)
+        cv::cvtColor(inputImage, displayImage, cv::COLOR_BGR2RGBA);
+    else if (inputImage.channels() == 4)
+        displayImage = inputImage.clone();
     else
         return;
+    cv::flip(displayImage, displayImage, 0);
 
-    cv::flip(displayImage, displayImage, 0);  // Flip for OpenGL
-
-    // Upload to texture
+    // Upload as OpenGL texture
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -73,5 +97,14 @@ cv::Mat GrayScaleNode::getImage() const {
 }
 
 void GrayScaleNode::setInputImage(const cv::Mat& input) {
-    inputImage = input;
+    inputImage = input.clone();
+}
+
+void GrayScaleNode::resetInput() {
+    inputImage.release();
+    textureValid = false;
+}
+
+void GrayScaleNode::process() {
+    
 }
