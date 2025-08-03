@@ -12,6 +12,7 @@
 #include "nodes/ImageInputNode.h"
 #include "nodes/GrayScaleNode.h"
 #include "nodes/ImageOutputNode.h"
+#include "nodes/BrightnessNode.h"
 
 struct Edge {
     int id;
@@ -46,7 +47,7 @@ public:
 
     void renderAddNodeUI() {
         static int selectedNodeType = 0;
-        const char* nodeTypes[] = { "Image Input", "Grayscale", "Image Output" };
+        const char* nodeTypes[] = { "Image Input", "Grayscale", "Brightness", "Image Output"};
 
         ImGui::Begin("Add Node");
 
@@ -58,7 +59,8 @@ public:
             switch (selectedNodeType) {
                 case 0: newNode = std::make_shared<ImageInputNode>(); break;
                 case 1: newNode = std::make_shared<GrayScaleNode>(); break;
-                case 2: newNode = std::make_shared<ImageOutputNode>(); break;
+                case 2: newNode = std::make_shared<BrightnessNode>(); break;
+                case 3: newNode = std::make_shared<ImageOutputNode>(); break;
                 default: std::cerr << "Unknown node type\n";
             }
 
