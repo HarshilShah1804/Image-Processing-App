@@ -17,6 +17,7 @@
 #include "nodes/BlurNode.h"
 #include "nodes/ExposureNode.h"
 #include "nodes/SharpenNode.h"
+#include "nodes/ContrastNode.h"
 
 struct Edge {
     int id;
@@ -51,7 +52,7 @@ public:
 
     void renderAddNodeUI() {
         static int selectedNodeType = 0;
-        const char* nodeTypes[] = { "Image Input", "Grayscale", "Brightness", "Rotate", "Blur", "Exposure", "Sharpen", "Image Output"};
+        const char* nodeTypes[] = { "Image Input", "Grayscale", "Brightness", "Rotate", "Blur", "Exposure", "Sharpen", "Contrast", "Image Output"};
 
         ImGui::Begin("Add Node");
 
@@ -68,7 +69,8 @@ public:
                 case 4: newNode = std::make_shared<BlurNode>(); break;
                 case 5: newNode = std::make_shared<ExposureNode>(); break;
                 case 6: newNode = std::make_shared<SharpenNode>(); break;
-                case 7: newNode = std::make_shared<ImageOutputNode>(); break;
+                case 7: newNode = std::make_shared<ContrastNode>(); break;
+                case 8: newNode = std::make_shared<ImageOutputNode>(); break;
                 default: std::cerr << "Unknown node type\n";
             }
 
