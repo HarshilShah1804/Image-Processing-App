@@ -1,52 +1,52 @@
-#include "BlurNode.h"
+#include "ExposureNode.h"
 #include <imgui.h>
 #include <imnodes.h>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <GL/gl.h>
 
-BlurNode::BlurNode() {
-    name = "Blur";
+ExposureNode::ExposureNode() {
+    name = "Exposure";
     position = ImVec2(100, 100); // Optional positioning
     textureID = 0;
     textureValid = false;
-    blurAmount = 0; // Default blur amount
+    exposureValue = 0; // Default Exposure Value
 
     id = Node::generateUniqueId();
     inputs.push_back({generateUniqueId(), "In"});
     outputs.push_back({generateUniqueId(), "Out"});
 }
 
-BlurNode::~BlurNode() {
+ExposureNode::~ExposureNode() {
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
         textureID = 0;
     }
 }
 
-void BlurNode::setInputImage(const cv::Mat &img) {
+void ExposureNode::setInputImage(const cv::Mat &img) {
     inputImage = img.clone();
     textureValid = false;  // Mark texture as invalid
 }
 
-cv::Mat BlurNode::getImage() const {
+cv::Mat ExposureNode::getImage() const {
     return outputImage;
 }
 
-void BlurNode::resetInput() {
+void ExposureNode::resetInput() {
     inputImage.release();
     textureValid = false;
 }
 
-std::string BlurNode::getName() const {
+std::string ExposureNode::getName() const {
     return name;
 }
 
-void BlurNode::process() {
+void ExposureNode::process() {
     updateTexture();
 }
 
-void BlurNode::renderUI() {
+void ExposureNode::renderUI() {
     ImNodes::BeginNode(id);
 
     ImNodes::BeginNodeTitleBar();
@@ -65,18 +65,20 @@ void BlurNode::renderUI() {
         ImNodes::EndOutputAttribute();
     }
 
-    ImGui::SliderInt("Blur Amount (kernel size)", &blurAmount, 1, 50, "%d");
+    ImGui::SliderFloat("Exposure Value", &exposureValue, -100.0f, 100.0f);
 
     if (ImGui::Button("Process")) {
         if (inputImage.empty()) {
-            std::cerr << "[BlurNode] No input image.\n";
+            std::cerr << "[ExposureNode] No input image.\n";
             return;
         }
         cv::Mat tempImage;
-        cv::blur(inputImage, tempImage, cv::Size(blurAmount, blurAmount));
-        outputImage = tempImage.clone();
+        inputImage.convertTo(tempImage, CV_32F, 1.0 / 255.0); // Convert to float
+        tempImage += cv::Scalar(exposureValue, exposureValue, exposureValue); // Apply exposure
+        cv::normalize(tempImage, outputImage, 0, 255, cv::NORM_MINMAX);
+        outputImage.convertTo(outputImage, CV_8U); // Convert back to 8-bit
         if (outputImage.empty()) {
-            std::cerr << "[BlurNode] Output image is empty after processing.\n";
+            std::cerr << "[ExposureNode] Output image is empty after processing.\n";
             textureValid = false;
             return;
         }
@@ -91,7 +93,7 @@ void BlurNode::renderUI() {
     ImNodes::EndNode();
 }
 
-void BlurNode::updateTexture() {
+void ExposureNode::updateTexture() {
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
         textureID = 0;
