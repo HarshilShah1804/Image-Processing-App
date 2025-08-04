@@ -4,10 +4,10 @@
 #include <string>
 #include <GL/gl.h>
 
-class RotateNode : public Node {
+class BlurNode : public Node {
 public:
-    RotateNode();
-    ~RotateNode();
+    BlurNode();
+    ~BlurNode();
 
     void renderUI() override;
     void process() override;
@@ -19,8 +19,8 @@ public:
     void resetInput() override;
 
     // Node-specific properties
-    int rotateValue = 0; // Rotation angle in degrees
-    void setRotateValue(int value) { rotateValue = value; }
+    int blurAmount = 0; // Blur intensity level
+    void setBlurAmount(int value) { blurAmount = value; }
 
 private:
     cv::Mat inputImage;

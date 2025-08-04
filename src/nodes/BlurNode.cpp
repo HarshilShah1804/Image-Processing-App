@@ -1,52 +1,52 @@
-#include "RotateNode.h"
+#include "BlurNode.h"
 #include <imgui.h>
 #include <imnodes.h>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <GL/gl.h>
 
-RotateNode::RotateNode() {
+BlurNode::BlurNode() {
     name = "Rotate";
     position = ImVec2(100, 100); // Optional positioning
     textureID = 0;
     textureValid = false;
-    rotateValue = 0; // Default Rotation Angle
+    blurAmount = 0; // Default blur amount
 
     id = Node::generateUniqueId();
     inputs.push_back({generateUniqueId(), "In"});
     outputs.push_back({generateUniqueId(), "Out"});
 }
 
-RotateNode::~RotateNode() {
+BlurNode::~BlurNode() {
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
         textureID = 0;
     }
 }
 
-void RotateNode::setInputImage(const cv::Mat &img) {
+void BlurNode::setInputImage(const cv::Mat &img) {
     inputImage = img.clone();
     textureValid = false;  // Mark texture as invalid
 }
 
-cv::Mat RotateNode::getImage() const {
+cv::Mat BlurNode::getImage() const {
     return outputImage;
 }
 
-void RotateNode::resetInput() {
+void BlurNode::resetInput() {
     inputImage.release();
     textureValid = false;
 }
 
-std::string RotateNode::getName() const {
+std::string BlurNode::getName() const {
     return name;
 }
 
-void RotateNode::process() {
+void BlurNode::process() {
     updateTexture();
 }
 
-void RotateNode::renderUI() {
+void BlurNode::renderUI() {
     ImNodes::BeginNode(id);
 
     ImNodes::BeginNodeTitleBar();
@@ -65,18 +65,18 @@ void RotateNode::renderUI() {
         ImNodes::EndOutputAttribute();
     }
 
-    ImGui::SliderInt("Rotation Values (in degrees)", &rotateValue, 0, 360);
+    ImGui::SliderInt("Blur Amount (kernel size)", &blurAmount, 1, 50, "%d");
 
     if (ImGui::Button("Process")) {
         if (inputImage.empty()) {
-            std::cerr << "[RotateNode] No input image.\n";
+            std::cerr << "[BlurNode] No input image.\n";
             return;
         }
         cv::Mat tempImage;
-        cv::rotate(inputImage, tempImage, rotateValue % 360); // Rotate the image
+        cv::blur(inputImage, tempImage, cv::Size(blurAmount, blurAmount));
         outputImage = tempImage.clone();
         if (outputImage.empty()) {
-            std::cerr << "[RotateNode] Output image is empty after processing.\n";
+            std::cerr << "[BlurNode] Output image is empty after processing.\n";
             textureValid = false;
             return;
         }
@@ -91,7 +91,7 @@ void RotateNode::renderUI() {
     ImNodes::EndNode();
 }
 
-void RotateNode::updateTexture() {
+void BlurNode::updateTexture() {
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
         textureID = 0;
